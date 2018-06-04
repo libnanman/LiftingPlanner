@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Lifting Planner</string>
+    <string name="add_lift_text">Add Lift</string>
+    <string name="lift_max_text">Lift Max</string>
+    <string name="lift_name_text">Lift Name</string>
+    <string name="lift_date_text">Lift Date</string>
+    <string name="view_workout_text">Today\'s Workout</string>
+    <string name="new_max">New Max</string>
+    <string name="delete_lift">Delete Lift</string>
+    <string name="calendar_button_name">Calendar Button</string>
+    <string name="workout_weight_text">Weight</string>
+    <string name="lift_reps_text">Reps</string>
+    <string name="actual_reps_text">Actual Reps</string>
+    <string name="lift_sets_text">Sets</string>
+    <string name="add_exercise_text">Add Exercise</string>
+    <string name="exercise_name_text">Exercise</string>
+    <string name="exercise_weight_text">Weight</string>
+    <string name="exercise_reps_text">Reps</string>
+    <string name="exercise_sets_text">Sets</string>
+    <string name="lift_weight_text">Weight</string>
+    <string name="weight_switch_off">Nominal</string>
+    <string name="weight_switch_on">Percent</string>
+    <string name="weight_switch_text">Nominal/Percent Weight Input</string>
+    <string name="delete_exercise">Delete Exercise</string>
+    <string name="completed_exercise">Complete Exercise</string>
+    <string name="choose_video_app">Choose Video App</string>
+    <string name="main_folder">LiftingPlannerVids</string>
+    <string name="lift_subfolder">LiftVids</string>
+    <string name="workout_subfolder">WorkoutVids</string>
+    <string name="take_video">Take Video</string>
+    <string name="select_video">Select Video</string>
+</resources>

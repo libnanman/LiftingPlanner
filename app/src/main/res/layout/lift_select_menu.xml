@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="0dp"
+    android:layout_width="0dp">
+    <item android:id="@+id/newMax"
+        android:title="@string/new_max" />
+    <item android:id="@+id/deleteLift"
+        android:title="@string/delete_lift" />
+    <item android:id="@+id/takeVideo"
+        android:title="@string/take_video"/>
+    <item android:id="@+id/selectVideo"
+        android:title="@string/select_video" />
+</menu>

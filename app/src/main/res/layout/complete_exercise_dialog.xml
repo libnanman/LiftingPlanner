@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <TableRow
+        android:id="@+id/completeExerciseWeightRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/completeExerciseWeightTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_weight_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/completeExerciseWeightEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/completeExerciseSetsRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/completeExerciseSetsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_sets_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/completeExerciseSetsEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/completeExerciseRepsRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/completeExerciseRepsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_reps_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/completeExerciseRepsEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+
+
+
+
+</TableLayout>

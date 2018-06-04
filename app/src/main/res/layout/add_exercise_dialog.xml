@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TableRow
+        android:id="@+id/addExerciseNameRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip">
+
+        <TextView
+            android:id="@+id/newExerciseNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_name_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/newExerciseNameEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/addExerciseWeightRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/newExerciseWeightTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_weight_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/newExerciseWeightEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/addExerciseSetsRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/newExerciseSetsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_sets_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/newExerciseSetsEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/addExerciseRepsRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <TextView
+            android:id="@+id/newExerciseRepsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/exercise_reps_text"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/newExerciseRepsEditText"
+            android:layout_width="272dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:padding="10dp" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/newExerciseWeightToggleRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dip" >
+
+        <!--<TextView-->
+            <!--android:id="@+id/newExerciseSwitchTextView"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:padding="10dp"-->
+            <!--android:text="@string/weight_switch_text"-->
+            <!--android:textSize="12sp" />-->
+
+        <Switch
+            android:id="@+id/newExerciseWeightSwitch"
+            android:layout_width="wrap_content"
+            android:showText="false"
+            android:textOff="@string/weight_switch_off"
+            android:textOn="@string/weight_switch_on" />
+
+        <TextView
+            android:id="@+id/newExerciseSwitchTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/weight_switch_text"
+            android:textSize="14sp" />
+    </TableRow>
+
+
+
+
+</TableLayout>

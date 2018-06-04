@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="0dp"
+    android:layout_width="0dp">
+    <item android:id="@+id/deleteExercise"
+        android:title="@string/delete_exercise" />
+    <item android:id="@+id/completedExercise"
+        android:title="@string/completed_exercise" />
+</menu>
