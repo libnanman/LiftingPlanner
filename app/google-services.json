@@ -1,74 +1,39 @@
 {
   "project_info": {
-    "project_number": "165389692820",
-    "firebase_url": "https://socialmeet-d20a0.firebaseio.com",
-    "project_id": "socialmeet-d20a0",
-    "storage_bucket": "socialmeet-d20a0.appspot.com"
+    "project_number": "51489267383",
+    "firebase_url": "https://liftingplanner-81f00.firebaseio.com",
+    "project_id": "liftingplanner-81f00",
+    "storage_bucket": "liftingplanner-81f00.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:165389692820:android:afc191a2a6ad1e66",
-        "android_client_info": {
-          "package_name": "com.example.gcham.socialmeet"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "165389692820-tca2a53vvbmo065tl3euvn19hbvttao8.apps.googleusercontent.com",
-          "client_type": 3
-        },
-        {
-          "client_id": "165389692820-tca2a53vvbmo065tl3euvn19hbvttao8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDSEfY8LEn5BBInbFlH8i5SnfIAKIXX_Jc"
-        }
-      ],
-      "services": {
-        "analytics_service": {
-          "status": 1
-        },
-        "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
-        },
-        "ads_service": {
-          "status": 2
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:165389692820:android:d01397c1c568a5bd",
+        "mobilesdk_app_id": "1:51489267383:android:d01397c1c568a5bd",
         "android_client_info": {
           "package_name": "com.libnanman.liftingplanner"
         }
       },
       "oauth_client": [
         {
-          "client_id": "165389692820-dgp695ef3bnkjdushlima1rc7552562h.apps.googleusercontent.com",
+          "client_id": "51489267383-o9dbknpadcthl21i9a67m17orr84o5qs.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.libnanman.liftingplanner",
-            "certificate_hash": "93cc068064f1bb20930ec32da3609bdb7e85d6a8"
+            "certificate_hash": "54552a790c4e564c75f123275aafd673766a1e04"
           }
         },
         {
-          "client_id": "165389692820-tca2a53vvbmo065tl3euvn19hbvttao8.apps.googleusercontent.com",
+          "client_id": "51489267383-ht5qolrbagqd59s1cbe0i3n45p6mif3j.apps.googleusercontent.com",
           "client_type": 3
         },
         {
-          "client_id": "165389692820-tca2a53vvbmo065tl3euvn19hbvttao8.apps.googleusercontent.com",
+          "client_id": "51489267383-ht5qolrbagqd59s1cbe0i3n45p6mif3j.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDSEfY8LEn5BBInbFlH8i5SnfIAKIXX_Jc"
+          "current_key": "AIzaSyBIkIefkJ-mDzJCueCqp6qLYCrQjLheZm8"
         }
       ],
       "services": {
@@ -79,7 +44,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "165389692820-tca2a53vvbmo065tl3euvn19hbvttao8.apps.googleusercontent.com",
+              "client_id": "51489267383-ht5qolrbagqd59s1cbe0i3n45p6mif3j.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
