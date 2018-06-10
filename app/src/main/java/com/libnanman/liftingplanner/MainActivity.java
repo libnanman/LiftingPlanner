@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                 Lift lift = liftList.get(position);
                 Toast.makeText(getApplicationContext(), lift.getName() + " video!", Toast.LENGTH_SHORT).show();
 
-                String mediaPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) +"/100MEDIA/VIDEO0026.mp4";
+                String mediaPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/100MEDIA/VIDEO0026.mp4";
                 File media = new File(mediaPath);
                 Uri uri = Uri.fromFile(media);
                 Intent videoIntent5 = new Intent(Intent.ACTION_VIEW);
