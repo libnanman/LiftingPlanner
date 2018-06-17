@@ -37,19 +37,19 @@
         android:text="Female"/>
 </RadioGroup>
 
-    <Number
+    <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="age"
         android:id="@+id/age"/>
 
-    <Number
+    <EditText
     android:id="@+id/height"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:hint="height" />
 
-    <Number
+    <EditText
         android:id="@+id/weight"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
