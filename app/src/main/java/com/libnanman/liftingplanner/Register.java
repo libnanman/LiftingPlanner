@@ -62,7 +62,7 @@ private ProgressDialog mProgress;
                     if(task.isSuccessful()){
 
                         FirebaseDatabase database = FirebaseDatabase.getInstance();
-                        FirebaseAuth.getInstance()
+                        FirebaseAuth.getInstance();
                         DatabaseReference myRef = database.getReference("message");
 
                         myRef.setValue("Hello, World!");
