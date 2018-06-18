@@ -5,6 +5,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,6 +25,13 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,7 +41,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView liftListRecyclerView;
@@ -40,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private LiftRecyclerViewAdapter liftListAdapter;
     private RecyclerView.LayoutManager liftListLayoutManager;
     private List<Lift> liftList = new ArrayList<>();
+    private HashMap<Lift, String> liftIdHash = new HashMap<>();
     private EditText liftName;
     private EditText liftMax;
     private Button addLift;
@@ -51,15 +63,17 @@ public class MainActivity extends AppCompatActivity {
     private CalendarView calendarView;
     private String date;
     private int newMaxValue;
-
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d/yyyy");
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private DatabaseReference databaseRef = database.getReference();
+    private DatabaseReference liftsRef = database.getReference("lifts");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setLiftList();
+//        setLiftList();
 
         liftName = (EditText) findViewById(R.id.liftName);
         liftMax = (EditText) findViewById(R.id.liftMax);
@@ -102,10 +116,50 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onLongClick(View view, int position) {
+
                 //do nothing
                 //getSupportActionBar().hide();
             }
         }));
+
+        ChildEventListener childEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Lift newLift = dataSnapshot.getValue(Lift.class);
+                liftIdHash.put(newLift, dataSnapshot.getKey());
+                liftList.add(newLift);
+                liftListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Lift changedLift = dataSnapshot.getValue(Lift.class);
+                liftIdHash.put(changedLift, dataSnapshot.getKey());
+                liftList.add(changedLift);
+                liftListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                String liftKey = dataSnapshot.getKey();
+//                liftsRef.child(liftKey).removeValue();
+                Lift removedLift = dataSnapshot.getValue(Lift.class);
+                liftIdHash.remove(removedLift);
+                removeFromLiftList(removedLift);
+                liftListAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                //nothing
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                //error
+            }
+        };
+        liftsRef.addChildEventListener(childEventListener);
 
         registerForContextMenu(liftListRecyclerView);
 
@@ -121,28 +175,32 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        String filename = "liftData";
-        File file = new File(getApplicationContext().getFilesDir(), filename);
-        FileOutputStream outputStream;
+//        String filename = "liftData";
+//        File file = new File(getApplicationContext().getFilesDir(), filename);
+//        FileOutputStream outputStream;
 
         Lift lift = new Lift(liftName.getText().toString(), Integer.parseInt(liftMax.getText().toString()), new Date());
-        String fileContents = liftName.getText().toString() + "!@!" + liftMax.getText().toString() + "!@!" + new Date() +"\n";
-        liftList.add(lift);
+//        String fileContents = liftName.getText().toString() + "!@!" + liftMax.getText().toString() + "!@!" + new Date() +"\n";
+//        liftList.add(lift);
 
-        try {
-            if(file.exists())
-                outputStream = new FileOutputStream(getApplicationContext().getFilesDir().toString() + "/" + filename, true);
-            else
-                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-
-            outputStream.write(fileContents.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            if(file.exists())
+//                outputStream = new FileOutputStream(getApplicationContext().getFilesDir().toString() + "/" + filename, true);
+//            else
+//                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+//
+//            outputStream.write(fileContents.getBytes());
+//            outputStream.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         liftName.setText("");
         liftMax.setText("");
+
+//        databaseRef.child("lifts").child(lift.getName()).setValue(lift);
+//        liftsRef.push(lift);
+        liftsRef.push().setValue(lift);
 
         liftListAdapter.notifyDataSetChanged();
     }
@@ -184,61 +242,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onContextItemSelected(item);
     }
 
-    private void setLiftList() {
-        //File directory = getApplicationContext().getFilesDir();
-        //File file = new File(directory, "liftData");
-        String filename = "liftData";
-        String data = "";
-        int byteVal;
-        char c;
-        try {
-            FileInputStream inputStream = openFileInput(filename);
-            //current = inputStream.read();
-            while((byteVal = inputStream.read()) != -1){
-                c = (char) byteVal;
-                data = data + c;
-            }
-
-            String[] tokens = data.split("\n");
-            for (String token : tokens) {
-                liftConversion(token);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        //liftListAdapter.notifyDataSetChanged();
-    }
-
-    private void resetLiftListData() {
-        String filename = "liftData";
-        FileOutputStream outputStream;
-
-        String fileContents = "";
-
-        for(Lift lift : liftList) {
-            fileContents = fileContents + lift.getName() + "!@!" + Integer.toString(lift.getMax()) + "!@!" + lift.getDate() +"\n";
-        }
-
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(fileContents.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        liftListAdapter.notifyDataSetChanged();
-    }
-
-    private void liftConversion(String splitString) throws ParseException {
-        String[] tokens = splitString.split("!@!");
-        Lift lift = new Lift(tokens[0], Integer.parseInt(tokens[1]), new Date(tokens[2]));
-
-        liftList.add(lift);
-    }
 
     protected void showNewMaxDialog(final int position) {
 
@@ -308,19 +311,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void setNewMax(int position) {
         Lift lift = liftList.get(position);
+        String liftKey = liftIdHash.get(lift);
         Toast.makeText(getApplicationContext(), lift.getName() + " max changed", Toast.LENGTH_SHORT).show();
         liftList.remove(position);
-        lift.setDate(new Date());
-        lift.setMax(newMaxValue);
-        liftList.add(lift);
-        resetLiftListData();
+        Map<String, Object> newMaxUpdates = new HashMap<>();
+        newMaxUpdates.put("date", new Date());
+        newMaxUpdates.put("max", newMaxValue);
+        liftsRef.child(liftKey).updateChildren(newMaxUpdates);
+
     }
 
     private void removeLift(int position) {
         Lift lift = liftList.get(position);
         Toast.makeText(getApplicationContext(), lift.getName() + " deleted", Toast.LENGTH_SHORT).show();
-        liftList.remove(position);
-        resetLiftListData();
+        liftsRef.child(liftIdHash.get(lift)).removeValue();
     }
 
     @Override
@@ -339,6 +343,17 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void removeFromLiftList(Lift lift){
+        Lift removingLift;
+        for (Lift listedLift : liftList) {
+            if(listedLift.getName().equals(lift.getName()) && listedLift.getMax() == lift.getMax() && listedLift.getDate().equals(lift.getDate())) {
+                removingLift = listedLift;
+                liftList.remove(removingLift);
+            }
+        }
+
     }
 
 }
