@@ -1,6 +1,9 @@
 package com.libnanman.liftingplanner;
 
-public class Workout {
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class Exercise {
 
     private String name;
     private int weight;
@@ -8,16 +11,22 @@ public class Workout {
     private int sets;
     private boolean percentMax;
     private boolean complete;
+    private String date;
+    private String uid;
 
-    public Workout() {}
+//    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d/yyyy");
 
-    public Workout(String name, int weight, int reps, int sets, boolean percentMax, boolean complete) {
+    public Exercise() {}
+
+    public Exercise(String name, int weight, int reps, int sets, boolean percentMax, boolean complete, String date, String uid) {
         this.name = name;
         this.weight = weight;
         this.reps = reps;
         this.sets = sets;
         this.percentMax = percentMax;
         this.complete = complete;
+        this.date = date;
+        this.uid = uid;
     }
 
     public String getName() {
@@ -67,4 +76,12 @@ public class Workout {
     public void setComplete(boolean complete) {
         this.complete = complete;
     }
+
+    public String getDate() { return date; }
+
+    public void setDate(String date){ this.date = date; }
+
+    public String getUid() { return uid; }
+
+    public void setUid(String uid){ this.uid = uid; }
 }

@@ -25,11 +25,17 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
@@ -62,11 +68,12 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mainActionBar;
     private CalendarView calendarView;
     private String date;
-    private int newMaxValue;
+//    private int newMaxValue;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d/yyyy");
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference databaseRef = database.getReference();
-    private DatabaseReference liftsRef = database.getReference("lifts");
+    private DatabaseReference liftsRef;// = database.getReference("lifts");
+    private String uid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +81,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        setLiftList();
+
+        FirebaseUser mUser = FirebaseAuth.getInstance().getCurrentUser();
+        uid = mUser.getUid();
+
+        liftsRef = database.getReference("lifts/" + uid);
+
+//        Query liftsQuery = liftsRef.orderByChild("uid").startAt(uid).endAt(uid);
 
         liftName = (EditText) findViewById(R.id.liftName);
         liftMax = (EditText) findViewById(R.id.liftMax);
@@ -160,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         liftsRef.addChildEventListener(childEventListener);
+//        liftsQuery.addChildEventListener(childEventListener);
 
         registerForContextMenu(liftListRecyclerView);
 
@@ -179,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
 //        File file = new File(getApplicationContext().getFilesDir(), filename);
 //        FileOutputStream outputStream;
 
-        Lift lift = new Lift(liftName.getText().toString(), Integer.parseInt(liftMax.getText().toString()), new Date());
+        Lift lift = new Lift(liftName.getText().toString(), Integer.parseInt(liftMax.getText().toString()), new Date(), uid);
 //        String fileContents = liftName.getText().toString() + "!@!" + liftMax.getText().toString() + "!@!" + new Date() +"\n";
 //        liftList.add(lift);
 
@@ -214,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
     public void onViewWorkout(View view) {
         Intent intent = new Intent(this, ViewWorkoutActivity.class);
         intent.putExtra("date", date);
+        intent.putExtra("uid", uid);
         startActivity(intent);
     }
 
@@ -257,8 +273,8 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         if(!editText.getText().toString().equals("")) {
-                            newMaxValue = Integer.parseInt(editText.getText().toString());
-                            setNewMax(position);
+                            int newMaxValue = Integer.parseInt(editText.getText().toString());
+                            setNewMax(position, newMaxValue);
                         }
                         else
                             Toast.makeText(getApplicationContext(), "New max not saved. You didn't enter a value, dummy.", Toast.LENGTH_LONG).show();
@@ -309,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void setNewMax(int position) {
+    private void setNewMax(int position, int newMaxValue) {
         Lift lift = liftList.get(position);
         String liftKey = liftIdHash.get(lift);
         Toast.makeText(getApplicationContext(), lift.getName() + " max changed", Toast.LENGTH_SHORT).show();
@@ -347,7 +363,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void removeFromLiftList(Lift lift){
         Lift removingLift;
-        for (Lift listedLift : liftList) {
+        Lift[] liftArray = new Lift[liftList.size()];
+        liftArray = liftList.toArray(liftArray);
+
+        for (Lift listedLift : liftArray) {
             if(listedLift.getName().equals(lift.getName()) && listedLift.getMax() == lift.getMax() && listedLift.getDate().equals(lift.getDate())) {
                 removingLift = listedLift;
                 liftList.remove(removingLift);

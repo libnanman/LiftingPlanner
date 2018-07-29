@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.StrictMode;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,7 +16,6 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,28 +26,46 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ViewWorkoutActivity extends AppCompatActivity {
 
-    private RecyclerView workoutRecyclerView;
-    private WorkoutRecyclerViewAdapter workoutAdapter;
-    private RecyclerView.LayoutManager workoutLayoutManager;
+    private RecyclerView exerciseRecyclerView;
+    private ExerciseRecyclerViewAdapter exerciseAdapter;
+    private RecyclerView.LayoutManager exerciseLayoutManager;
     private Toolbar viewWorkoutActionBar;
     private TextView viewWorkoutDate;
     private CalendarView calendarView;
     private MenuItem calendarButton;
     private MenuItem deleteWorkout;
     private String date;
-    private List<Workout> workoutList = new ArrayList<>();
-    private List<Workout> workoutOutputs = new ArrayList<>();
+    private List<Exercise> exerciseList = new ArrayList<>();
+    private HashMap<Exercise, String> exerciseIdHash = new HashMap<>();
+    private List<Exercise> exerciseOutputs = new ArrayList<>();
     private List<Lift> liftList = new ArrayList<>();
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private DatabaseReference databaseRef = database.getReference();
+    private DatabaseReference liftsRef;// = database.getReference("lifts");
+    private DatabaseReference exercisesRef;// = database.getReference("exercises");
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d/yyyy");
+    private String uid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,28 +82,36 @@ public class ViewWorkoutActivity extends AppCompatActivity {
         deleteWorkout = (MenuItem) findViewById(R.id.deleteExercise);
 
         date = getIntent().getExtras().getString("date");
+        uid = getIntent().getExtras().getString("uid");
+
+        liftsRef = database.getReference("lifts/" + uid);
+        exercisesRef = database.getReference("exercises/" + uid);
+
+        Query liftsQuery = liftsRef.orderByChild("uid").startAt(uid).endAt(uid);
+        Query exercisesQuery = exercisesRef.orderByChild("date").startAt(date).endAt(date);
+//        Query finalExercisesQuery = exercisesQuery.orderByChild("date").startAt(date).endAt(date);
 
         viewWorkoutDate.setText(date);
 
         setSupportActionBar(viewWorkoutActionBar);
 
-        workoutRecyclerView = (RecyclerView) findViewById(R.id.workoutListRecyclerView);
+        exerciseRecyclerView = (RecyclerView) findViewById(R.id.exerciseListRecyclerView);
 
-        workoutAdapter = new WorkoutRecyclerViewAdapter(workoutOutputs);
-        workoutLayoutManager = new LinearLayoutManager(getApplicationContext());
-        workoutRecyclerView.setLayoutManager(workoutLayoutManager);
-        workoutRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        exerciseAdapter = new ExerciseRecyclerViewAdapter(exerciseList);
+        exerciseLayoutManager = new LinearLayoutManager(getApplicationContext());
+        exerciseRecyclerView.setLayoutManager(exerciseLayoutManager);
+        exerciseRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
-        workoutRecyclerView.addItemDecoration(dividerItemDecoration);
+        exerciseRecyclerView.addItemDecoration(dividerItemDecoration);
 
-        workoutRecyclerView.setAdapter(workoutAdapter);
+        exerciseRecyclerView.setAdapter(exerciseAdapter);
 
-        workoutRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), workoutRecyclerView, new RecyclerTouchListener.ClickListener() {
+        exerciseRecyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), exerciseRecyclerView, new RecyclerTouchListener.ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                Workout workout = workoutList.get(position);
-                Toast.makeText(getApplicationContext(), workout.getName() + " video!", Toast.LENGTH_SHORT).show();
+                Exercise exercise = exerciseList.get(position);
+                Toast.makeText(getApplicationContext(), exercise.getName() + " video!", Toast.LENGTH_SHORT).show();
 
                 String mediaPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) +"/100MEDIA/VIDEO0026.mp4";
                 File media = new File(mediaPath);
@@ -104,10 +131,84 @@ public class ViewWorkoutActivity extends AppCompatActivity {
             }
         }));
 
-        registerForContextMenu(workoutRecyclerView);
+        ChildEventListener liftsChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Lift newLift = dataSnapshot.getValue(Lift.class);
+                liftList.add(newLift);
+            }
 
-        setLiftList();
-        setWorkoutList();
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Lift changedLift = dataSnapshot.getValue(Lift.class);
+                liftList.add(changedLift);
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                String liftKey = dataSnapshot.getKey();
+//                liftsRef.child(liftKey).removeValue();
+                Lift removedLift = dataSnapshot.getValue(Lift.class);
+                removeFromLiftList(removedLift);
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                //nothing
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                //error
+            }
+        };
+//        liftsRef.addChildEventListener(childEventListener);
+        liftsQuery.addChildEventListener(liftsChildEventListener);
+
+        ChildEventListener exercisesChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Exercise newExercise = dataSnapshot.getValue(Exercise.class);
+                exerciseList.add(newExercise);
+                exerciseIdHash.put(newExercise, dataSnapshot.getKey());
+                exerciseAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Exercise changedExercise = dataSnapshot.getValue(Exercise.class);
+                exerciseList.add(changedExercise);
+                exerciseIdHash.put(changedExercise, dataSnapshot.getKey());
+                exerciseAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//                String liftKey = dataSnapshot.getKey();
+//                liftsRef.child(liftKey).removeValue();
+                Exercise removedExercise = dataSnapshot.getValue(Exercise.class);
+                exerciseIdHash.remove(removedExercise);
+                removeFromExerciseList(removedExercise);
+                exerciseAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                //nothing
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                //error
+            }
+        };
+//        liftsRef.addChildEventListener(childEventListener);
+        exercisesQuery.addChildEventListener(exercisesChildEventListener);
+
+        registerForContextMenu(exerciseRecyclerView);
+
+        //setLiftList();
+//        setExerciseList();
 
         //prepareTest();
     }
@@ -116,16 +217,16 @@ public class ViewWorkoutActivity extends AppCompatActivity {
     public boolean onContextItemSelected(MenuItem item) {
         int position = -1;
         try {
-            position = workoutAdapter.getPosition();
+            position = exerciseAdapter.getPosition();
         } catch (Exception e) {
             e.printStackTrace();
         }
         switch (item.getItemId()) {
             case R.id.deleteExercise:
-                    removeWorkout(position);
+                    removeExercise(position);
                 break;
             case R.id.completedExercise:
-                    completeWorkout(position);
+                    completeExercise(position);
                 break;
         }
         return super.onContextItemSelected(item);
@@ -150,7 +251,7 @@ public class ViewWorkoutActivity extends AppCompatActivity {
             public void onSelectedDayChange(CalendarView view, int year, int month, int day) {
                 Toast.makeText(getApplicationContext(), month + 1 + "/" + day + "/" + year + " selected", Toast.LENGTH_LONG).show();
                 date = (month + 1) + "/" + day + "/" + year;
-                setWorkoutList();
+//                setExerciseList();
                 viewWorkoutDate.setText(date);
                 alert.cancel();
             }
@@ -176,7 +277,7 @@ public class ViewWorkoutActivity extends AppCompatActivity {
         }
     }
 
-    public void onAddExercise(View view){
+    public void onAddExerciseClick(View view){
         LayoutInflater layoutInflater = LayoutInflater.from(ViewWorkoutActivity.this);
         View promptView = layoutInflater.inflate(R.layout.add_exercise_dialog, null);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ViewWorkoutActivity.this);
@@ -196,18 +297,19 @@ public class ViewWorkoutActivity extends AppCompatActivity {
                             if(!(newExerciseWeightSwitch.isChecked() && findLiftMaxByName(newExerciseNameEditText.getText().toString()) == -69)) {
 
 
-                                Workout workout = new Workout(newExerciseNameEditText.getText().toString(),
+                                Exercise exercise = new Exercise(newExerciseNameEditText.getText().toString(),
                                         Integer.parseInt(newExerciseWeightEditText.getText().toString()),
                                         Integer.parseInt(newExerciseRepsEditText.getText().toString()),
                                         Integer.parseInt(newExerciseSetsEditText.getText().toString()),
-                                        newExerciseWeightSwitch.isChecked(), false);
-                                onAddWorkout(workout);
+                                        newExerciseWeightSwitch.isChecked(), false, date, uid);
+//                                onAddExercise(exercise);
+                                onAddExercise(exercise);
 
                             }
                             else
                                 Toast.makeText(getApplicationContext(), "New exercise not saved. You haven't saved a working max for that lift, dummy", Toast.LENGTH_LONG).show();
-                            //workoutList.add(workout);
-                            //workoutAdapter.notifyDataSetChanged();
+                            //exerciseList.add(workout);
+                            //exerciseAdapter.notifyDataSetChanged();
                         }
                         else
                             Toast.makeText(getApplicationContext(), "New exercise not saved. You didn't enter a value, dummy.", Toast.LENGTH_LONG).show();
@@ -226,163 +328,17 @@ public class ViewWorkoutActivity extends AppCompatActivity {
 
     }
 
-    public void onAddWorkout(Workout workout) {
 
-        String filename = "workout_" + dateConverter(date);
-        File file = new File(getApplicationContext().getFilesDir(), filename);
-        FileOutputStream outputStream;
-
-        String fileContents = workout.getName() + "!@!" + workout.getWeight() + "!@!" + workout.getSets() + "!@!"
-                + workout.getReps() + "!@!" + workout.isPercentMax() + "!@!" + workout.isComplete() + "\n";
-
-        //Workout lift = new Lift(workout.getName(), Integer.parseInt(liftMax.getText().toString()), new Date());
-//        if(!workout.isPercentMax()) {
-//            fileContents = workout.getName() + "!@!" + workout.getWeight() + "!@!" + workout.getSets() + "!@!" + workout.getReps() + "\n";
-//        }
-//        else {
-//            fileContents = workout.getName() + "!@!" + workout.getWeight() + "!@!" + workout.getSets() + "!@!" + workout.getReps() + "\n";
-//        }
-
-        workoutList.add(workout);
-
-        try {
-            if (file.exists())
-                outputStream = new FileOutputStream(getApplicationContext().getFilesDir().toString() + "/" + filename, true);
-            else
-                outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-
-            outputStream.write(fileContents.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void onAddExercise(Exercise exercise) {
+        if(exercise.isPercentMax()){
+            double max = findLiftMaxByName(exercise.getName());
+            int weight = (int) max*exercise.getWeight()/100;
+            exercise.setWeight(weight);
         }
 
-        setWorkoutOutputs();
-
-        workoutAdapter.notifyDataSetChanged();
+        exercisesRef.push().setValue(exercise);
     }
 
-    private void setWorkoutOutputs() {
-        workoutOutputs.removeAll(workoutOutputs);
-        for(Workout workout : workoutList) {
-            if(workout.isPercentMax()) {
-                double weight = workout.getWeight()*0.01*findLiftMaxByName(workout.getName());
-                workoutOutputs.add(new Workout(workout.getName(), (int) weight, workout.getReps(), workout.getSets(), workout.isPercentMax(), workout.isComplete()));
-            }
-            else
-                workoutOutputs.add(workout);
-        }
-    }
-
-    private void setWorkoutList() {
-        //File directory = getApplicationContext().getFilesDir();
-        //File file = new File(directory, "liftData");
-        workoutList.removeAll(workoutList);
-        String filename = "workout_" + dateConverter(date);
-        String data = "";
-        int byteVal;
-        char c;
-        try {
-            FileInputStream inputStream = openFileInput(filename);
-            //current = inputStream.read();
-            while((byteVal = inputStream.read()) != -1){
-                c = (char) byteVal;
-                data = data + c;
-            }
-
-            String[] tokens = data.split("\n");
-            for (String token : tokens) {
-                workoutConversion(token);
-            }
-
-        } catch (Exception e) {
-            //workoutList.removeAll(workoutList);
-            e.printStackTrace();
-        }
-
-        setWorkoutOutputs();
-
-        workoutAdapter.notifyDataSetChanged();
-    }
-
-    private void workoutConversion(String splitString) throws ParseException {
-        String[] tokens = splitString.split("!@!");
-        Workout workout = new Workout(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[3]), Integer.parseInt(tokens[2]), Boolean.parseBoolean(tokens[4]), Boolean.parseBoolean(tokens[5]));
-
-        workoutList.add(workout);
-    }
-
-    private void resetWorkoutListData() {
-        String filename = "workout_" + dateConverter(date);
-        FileOutputStream outputStream;
-
-        String fileContents = "";
-
-        for(Workout workout : workoutList) {
-            fileContents = fileContents + workout.getName() + "!@!" + Integer.toString(workout.getWeight()) + "!@!" +
-                    Integer.toString(workout.getSets()) +"!@!" + Integer.toString(workout.getReps()) + "!@!" +
-                    workout.isPercentMax() + "!@!" + workout.isComplete() + "\n";
-        }
-
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(fileContents.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        setWorkoutOutputs();
-
-        workoutAdapter.notifyDataSetChanged();
-    }
-
-    private void setLiftList() {
-        //File directory = getApplicationContext().getFilesDir();
-        //File file = new File(directory, "liftData");
-        String filename = "liftData";
-        String data = "";
-        int byteVal;
-        char c;
-        try {
-            FileInputStream inputStream = openFileInput(filename);
-            //current = inputStream.read();
-            while((byteVal = inputStream.read()) != -1){
-                c = (char) byteVal;
-                data = data + c;
-            }
-
-            String[] tokens = data.split("\n");
-            for (String token : tokens) {
-                liftConversion(token);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        //liftListAdapter.notifyDataSetChanged();
-    }
-
-    private void liftConversion(String splitString) throws ParseException {
-        String[] tokens = splitString.split("!@!");
-        Lift lift = new Lift(tokens[0], Integer.parseInt(tokens[1]), new Date(tokens[2]));
-
-        liftList.add(lift);
-    }
-
-    private void prepareTest() {
-        Workout workout = new Workout("Bench", 150, 10, 3, false, false);
-        workoutList.add(workout);
-        workout = new Workout("Military", 100, 10, 3, false, false);
-        workoutList.add(workout);
-        return;
-    }
-
-    private String dateConverter(String date) {
-        return date.replace("/", "-");
-    }
 
     private double findLiftMaxByName(String liftName) {
         for(Lift lift : liftList) {
@@ -392,29 +348,30 @@ public class ViewWorkoutActivity extends AppCompatActivity {
         return -69;
     }
 
-    private void removeWorkout(int position) {
-        Workout workout = workoutList.get(position);
-        Toast.makeText(getApplicationContext(), workout.getName() + " deleted", Toast.LENGTH_SHORT).show();
-        workoutList.remove(position);
-        resetWorkoutListData();
+    private void removeExercise(int position) {
+        Exercise exercise = exerciseList.get(position);
+        Toast.makeText(getApplicationContext(), exercise.getName() + " deleted", Toast.LENGTH_SHORT).show();
+        exerciseList.remove(position);
+        exercisesRef.child(exerciseIdHash.get(exercise)).removeValue();
+//        resetExerciseListData();
     }
 
-    private void completeWorkout(final int position) {
+    private void completeExercise(final int position) {
         LayoutInflater layoutInflater = LayoutInflater.from(ViewWorkoutActivity.this);
         View promptView = layoutInflater.inflate(R.layout.complete_exercise_dialog, null);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ViewWorkoutActivity.this);
         alertDialogBuilder.setView(promptView);
 
 
-        final Workout workout = workoutOutputs.get(position);
+        final Exercise exercise = exerciseList.get(position);
 
         final EditText completeExerciseWeightEditText = (EditText) promptView.findViewById(R.id.completeExerciseWeightEditText);
         final EditText completeExerciseSetsEditText = (EditText) promptView.findViewById(R.id.completeExerciseSetsEditText);
         final EditText completeExerciseRepsEditText = (EditText) promptView.findViewById(R.id.completeExerciseRepsEditText);
 
-        completeExerciseWeightEditText.setText(String.valueOf(workout.getWeight()));
-        completeExerciseSetsEditText.setText(String.valueOf(workout.getSets()));
-        completeExerciseRepsEditText.setText(String.valueOf(workout.getReps()));
+        completeExerciseWeightEditText.setText(String.valueOf(exercise.getWeight()));
+        completeExerciseSetsEditText.setText(String.valueOf(exercise.getSets()));
+        completeExerciseRepsEditText.setText(String.valueOf(exercise.getReps()));
 
         alertDialogBuilder.setCancelable(false)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -424,14 +381,15 @@ public class ViewWorkoutActivity extends AppCompatActivity {
                             return;
                         }
 
-                        workout.setPercentMax(false);
-                        workout.setWeight(Integer.parseInt(completeExerciseWeightEditText.getText().toString()));
-                        workout.setSets(Integer.parseInt(completeExerciseSetsEditText.getText().toString()));
-                        workout.setReps(Integer.parseInt(completeExerciseRepsEditText.getText().toString()));
+                        //exercise.setPercentMax(false);
+                        exercise.setWeight(Integer.parseInt(completeExerciseWeightEditText.getText().toString()));
+                        exercise.setSets(Integer.parseInt(completeExerciseSetsEditText.getText().toString()));
+                        exercise.setReps(Integer.parseInt(completeExerciseRepsEditText.getText().toString()));
 
-                        workoutList.set(position, new Workout(workout.getName(), workout.getWeight(), workout.getReps(), workout.getSets(), false, true));
-                        Toast.makeText(getApplicationContext(), workout.getName() + " completed", Toast.LENGTH_SHORT).show();
-                        resetWorkoutListData();
+                        setExerciseComplete(position, exercise);
+//                        exerciseList.set(position, new Exercise(exercise.getName(), exercise.getWeight(), exercise.getReps(), exercise.getSets(), false, true, date, uid));
+//                        Toast.makeText(getApplicationContext(), exercise.getName() + " completed", Toast.LENGTH_SHORT).show();
+//                        resetExerciseListData();
 
                     }
                 })
@@ -448,14 +406,47 @@ public class ViewWorkoutActivity extends AppCompatActivity {
 
     }
 
-    public List<Integer> findCompletedWorkouts() {
-        List<Integer> completedPositions = new ArrayList<>();
-        for(Workout workout : workoutList) {
-            if(workout.isComplete())
-                completedPositions.add(workoutList.indexOf(workout));
+    private void setExerciseComplete(int position, Exercise changedExercise){
+        Exercise exercise = exerciseList.get(position);
+        String exerciseKey = exerciseIdHash.get(exercise);
+        Toast.makeText(getApplicationContext(), exercise.getName() + " completed", Toast.LENGTH_SHORT).show();
+        exerciseList.remove(position);
+        Map<String, Object> completedExerciseUpdates = new HashMap<>();
+        completedExerciseUpdates.put("date", simpleDateFormat.format(new Date()));
+        completedExerciseUpdates.put("weight", changedExercise.getWeight());
+        completedExerciseUpdates.put("sets", changedExercise.getSets());
+        completedExerciseUpdates.put("reps", changedExercise.getReps());
+        completedExerciseUpdates.put("complete", true);
+        exercisesRef.child(exerciseKey).updateChildren(completedExerciseUpdates);
+    }
+
+    private void removeFromLiftList(Lift lift){
+        Lift removingLift;
+        Lift[] liftArray = new Lift[liftList.size()];
+        liftArray = liftList.toArray(liftArray);
+
+        for (Lift listedLift : liftArray) {
+            if(listedLift.getName().equals(lift.getName()) && listedLift.getMax() == lift.getMax() && listedLift.getDate().equals(lift.getDate())) {
+                removingLift = listedLift;
+                liftList.remove(removingLift);
+            }
         }
 
-        return completedPositions;
+    }
+
+
+    private void removeFromExerciseList(Exercise exercise){
+        Exercise removingExercise;
+        Exercise[] exerciseArray = new Exercise[exerciseList.size()];
+        exerciseArray = exerciseList.toArray(exerciseArray);
+
+        for (Exercise listedExercise : exerciseArray) {
+            if(listedExercise.getName().equals(exercise.getName()) && listedExercise.getReps() == exercise.getReps() && listedExercise.getDate().equals(exercise.getDate()) && exercise.getWeight() == listedExercise.getWeight() && exercise.getSets() == listedExercise.getSets()) {
+                removingExercise = listedExercise;
+                liftList.remove(removingExercise);
+            }
+        }
+
     }
 
 }

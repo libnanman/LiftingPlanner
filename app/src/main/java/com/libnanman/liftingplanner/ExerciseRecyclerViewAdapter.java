@@ -7,13 +7,11 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 
 //import com.libnanman.liftingplanner.LiftFragment.OnListFragmentInteractionListener;
 //import com.libnanman.liftingplanner.dummy.DummyContent.Lift;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 ///**
@@ -21,15 +19,15 @@ import java.util.List;
 // * specified {@link OnListFragmentInteractionListener}.
 // * TODO: Replace the implementation with code for your data type.
 // */
-public class WorkoutRecyclerViewAdapter extends RecyclerView.Adapter<WorkoutRecyclerViewAdapter.WorkoutViewHolder> {
+public class ExerciseRecyclerViewAdapter extends RecyclerView.Adapter<ExerciseRecyclerViewAdapter.ExerciseViewHolder> {
 
-    private List<Workout> workoutList;
+    private List<Exercise> exerciseList;
     public int position;
 
-    public class WorkoutViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
+    public class ExerciseViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
         public TextView workoutName, workoutReps, workoutWeight, workoutSets;
 
-        public WorkoutViewHolder(View view) {
+        public ExerciseViewHolder(View view) {
             super(view);
             workoutName = (TextView) view.findViewById(R.id.workoutName);
             workoutReps = (TextView) view.findViewById(R.id.workoutReps);
@@ -46,22 +44,22 @@ public class WorkoutRecyclerViewAdapter extends RecyclerView.Adapter<WorkoutRecy
         }
     }
 
-    public WorkoutRecyclerViewAdapter(List<Workout> workoutList) { this.workoutList = workoutList; }
+    public ExerciseRecyclerViewAdapter(List<Exercise> exerciseList) { this.exerciseList = exerciseList; }
 
     @Override
-    public WorkoutViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.workout_list_row, parent, false);
+    public ExerciseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.exercise_list_row, parent, false);
 
-        return new WorkoutViewHolder(itemView);
+        return new ExerciseViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(final WorkoutViewHolder holder, int position) {
-        Workout workout = workoutList.get(position);
-        holder.workoutName.setText(workout.getName());
-        holder.workoutWeight.setText(Integer.toString(workout.getWeight()));
-        holder.workoutReps.setText(Integer.toString(workout.getReps()));
-        holder.workoutSets.setText(Integer.toString(workout.getSets()));
+    public void onBindViewHolder(final ExerciseViewHolder holder, int position) {
+        Exercise exercise = exerciseList.get(position);
+        holder.workoutName.setText(exercise.getName());
+        holder.workoutWeight.setText(Integer.toString(exercise.getWeight()));
+        holder.workoutReps.setText(Integer.toString(exercise.getReps()));
+        holder.workoutSets.setText(Integer.toString(exercise.getSets()));
 
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -71,14 +69,14 @@ public class WorkoutRecyclerViewAdapter extends RecyclerView.Adapter<WorkoutRecy
             }
         });
 
-        if(workout.isComplete()) {
+        if(exercise.isComplete()) {
             holder.itemView.setBackgroundColor(Color.parseColor("#32CD32"));
         }
 
     }
 
     @Override
-    public int getItemCount() { return workoutList.size(); }
+    public int getItemCount() { return exerciseList.size(); }
 
     public int getPosition() { return position; }
 

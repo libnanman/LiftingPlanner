@@ -8,6 +8,7 @@ public class User {
     private int weight;
     private String gender;
 
+    public User(){}
 
     public User (String name, int age, int height, int weight, String gender) {
         this.name = name;
