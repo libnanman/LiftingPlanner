@@ -1,10 +1,13 @@
 package com.libnanman.liftingplanner;
 
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -26,6 +29,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -37,12 +42,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -51,12 +61,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.libnanman.liftingplanner.Utils.getRealPathFromURI;
+
 public class MainActivity extends AppCompatActivity {
     private RecyclerView liftListRecyclerView;
     //private RecyclerView.Adapter liftListAdapter;
     private LiftRecyclerViewAdapter liftListAdapter;
     private RecyclerView.LayoutManager liftListLayoutManager;
     private List<Lift> liftList = new ArrayList<>();
+    private Lift currentLift;
     private HashMap<Lift, String> liftIdHash = new HashMap<>();
     private EditText liftName;
     private EditText liftMax;
@@ -73,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference databaseRef = database.getReference();
     private DatabaseReference liftsRef;// = database.getReference("lifts");
+    private FirebaseStorage storage = FirebaseStorage.getInstance();
+    private StorageReference maxesRef;
     private String uid;
 
     @Override
@@ -86,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
         uid = mUser.getUid();
 
         liftsRef = database.getReference("lifts/" + uid);
+        maxesRef = storage.getReference("maxes/" + uid);
 
 //        Query liftsQuery = liftsRef.orderByChild("uid").startAt(uid).endAt(uid);
 
@@ -249,7 +265,12 @@ public class MainActivity extends AppCompatActivity {
                 //do something
                 break;
             case R.id.selectVideo:
-                //onSelectVideo(position);
+                try {
+                    onSelectVideo(position);
+                } catch (FileNotFoundException e) {
+                    Toast.makeText(getApplicationContext(), "file not found", Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
                 break;
             case R.id.deleteLift:
                 removeLift(position);
@@ -293,10 +314,51 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void onSelectVideo(int position) {
+    private void onSelectVideo(int position) throws FileNotFoundException {
         Lift lift = liftList.get(position);
-        
+        currentLift = lift;
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, 0);
     }
+
+    private void saveVideoToDB(File file) throws FileNotFoundException {
+        StorageReference maxRef = maxesRef.child(currentLift.getName());
+        InputStream stream = new FileInputStream(file);
+        UploadTask uploadTask = maxRef.putStream(stream);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //failed
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                Toast.makeText(getApplicationContext(), "upload completed", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                Toast.makeText(getApplicationContext(), "uploading...", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Check which request we're responding to
+        if (requestCode == 0) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_OK) {
+                File file = new File(getRealPathFromURI(data.getData(), getApplicationContext()));
+                try {
+                    saveVideoToDB(file);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 
     protected void showCalendarDialog() {
 
