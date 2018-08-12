@@ -74,6 +74,9 @@ public class ExerciseRecyclerViewAdapter extends RecyclerView.Adapter<ExerciseRe
         if(exercise.isComplete()) {
             holder.itemView.setBackgroundColor(Color.parseColor("#32CD32"));
         }
+        else {
+            holder.itemView.setBackgroundColor(Color.parseColor("#FFFFFF"));
+        }
 
     }
 
