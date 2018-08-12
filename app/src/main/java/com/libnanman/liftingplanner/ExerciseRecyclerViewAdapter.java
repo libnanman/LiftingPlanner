@@ -41,6 +41,8 @@ public class ExerciseRecyclerViewAdapter extends RecyclerView.Adapter<ExerciseRe
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
             menu.add(Menu.NONE, R.id.deleteExercise, Menu.NONE, "Delete Exercise");
             menu.add(Menu.NONE, R.id.completedExercise, Menu.NONE, "Complete Exercise");
+            menu.add(Menu.NONE, R.id.takeVideo, Menu.NONE, "Take Video");
+            menu.add(Menu.NONE, R.id.selectVideo, Menu.NONE, "Select Video");
         }
     }
 
