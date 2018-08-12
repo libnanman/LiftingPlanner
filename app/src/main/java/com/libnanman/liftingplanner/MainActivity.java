@@ -42,9 +42,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StreamDownloadTask;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
@@ -133,15 +135,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view, int position) {
                 Lift lift = liftList.get(position);
+                StorageReference maxRef = maxesRef.child(lift.getName());
                 Toast.makeText(getApplicationContext(), lift.getName() + " video!", Toast.LENGTH_SHORT).show();
-
-                String mediaPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/100MEDIA/VIDEO0026.mp4";
-                File media = new File(mediaPath);
-                Uri uri = Uri.fromFile(media);
-                Intent videoIntent5 = new Intent(Intent.ACTION_VIEW);
-                videoIntent5.setDataAndType(uri, "video/*");
-                Intent chooser = Intent.createChooser(videoIntent5, getResources().getString(R.string.choose_video_app));
-                startActivity(chooser);
+                maxRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Intent videoIntent5 = new Intent(Intent.ACTION_VIEW);
+                        videoIntent5.setDataAndType(uri, "video/*");
+                        Intent chooser = Intent.createChooser(videoIntent5, getResources().getString(R.string.choose_video_app));
+                        startActivity(chooser);
+                    }
+                });
             }
 
             @Override
@@ -262,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                 showNewMaxDialog(position);
                 break;
             case R.id.takeVideo:
-                //do something
+                onTakeVideo(position);
                 break;
             case R.id.selectVideo:
                 try {
@@ -314,11 +318,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void onTakeVideo(int position){
+        Lift lift = liftList.get(position);
+        currentLift = lift;
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if(intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(intent, 1);
+        }
+    }
+
     private void onSelectVideo(int position) throws FileNotFoundException {
         Lift lift = liftList.get(position);
         currentLift = lift;
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, 0);
+        if(intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(intent, 0);
+        }
     }
 
     private void saveVideoToDB(File file) throws FileNotFoundException {
@@ -346,11 +361,21 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
-        if (requestCode == 0) {
+        if(requestCode == 0) {
             // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
+            if(resultCode == RESULT_OK) {
                 File file = new File(getRealPathFromURI(data.getData(), getApplicationContext()));
-                try {
+                try{
+                    saveVideoToDB(file);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else if(requestCode == 1){
+            if(resultCode == RESULT_OK) {
+                File file = new File(getRealPathFromURI(data.getData(), getApplicationContext()));
+                try{
                     saveVideoToDB(file);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
