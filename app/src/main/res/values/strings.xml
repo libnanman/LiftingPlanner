@@ -29,4 +29,7 @@
     <string name="workout_subfolder">WorkoutVids</string>
     <string name="take_video">Take Video</string>
     <string name="select_video">Select Video</string>
+    <string name="my_profile_string">My Profile</string>
+    <string name="profile_search_string">Search Profile</string>
+    <string name="settings_string">Settings</string>
 </resources>

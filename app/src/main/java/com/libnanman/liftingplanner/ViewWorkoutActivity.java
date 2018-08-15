@@ -9,6 +9,10 @@ import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -62,6 +66,9 @@ public class ViewWorkoutActivity extends AppCompatActivity {
     private ExerciseRecyclerViewAdapter exerciseAdapter;
     private RecyclerView.LayoutManager exerciseLayoutManager;
     private Toolbar viewWorkoutActionBar;
+    private ActionBar actionBar;
+    private DrawerLayout drawerLayout;
+    private NavigationView navigationView;
     private TextView viewWorkoutDate;
     private CalendarView calendarView;
     private MenuItem calendarButton;
@@ -96,6 +103,38 @@ public class ViewWorkoutActivity extends AppCompatActivity {
         calendarButton = (MenuItem) findViewById(R.id.calendar_button);
         viewWorkoutDate = (TextView) findViewById(R.id.viewWorkoutDate);
         deleteWorkout = (MenuItem) findViewById(R.id.deleteExercise);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+
+        setSupportActionBar(viewWorkoutActionBar);
+        actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
+
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                        //item.setChecked(true);
+                        drawerLayout.closeDrawers();
+                        switch(item.getItemId()){
+                            case R.id.nav_today_workout:
+                                break;
+                            case R.id.nav_my_profile:
+//                                navigationView.getMenu().getItem(0).setChecked(true);
+                                finish();
+                                break;
+                            case R.id.nav_profile_search:
+                                break;
+                            case R.id.nav_settings:
+                                break;
+                        }
+
+                        return true;
+                    }
+                }
+        );
+
 
         date = getIntent().getExtras().getString("date");
         uid = getIntent().getExtras().getString("uid");
@@ -153,14 +192,20 @@ public class ViewWorkoutActivity extends AppCompatActivity {
 
 
         resetLiftQuery();
-        resetExerciseQuery();       ///////////////////maybe need to destroy previous child event listener
+        resetExerciseQuery();
 
         registerForContextMenu(exerciseRecyclerView);
 
-        //setLiftList();
-//        setExerciseList();
+        navigationView.getMenu().getItem(1).setChecked(true);
 
-        //prepareTest();
+
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        navigationView.getMenu().getItem(1).setChecked(true);
     }
 
     @Override
@@ -234,7 +279,9 @@ public class ViewWorkoutActivity extends AppCompatActivity {
             case R.id.calendar_button:
                 showCalendarDialog();
                 return true;
-
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -571,6 +618,8 @@ public class ViewWorkoutActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
 }
 

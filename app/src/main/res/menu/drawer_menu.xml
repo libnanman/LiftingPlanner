@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_my_profile"
+            android:icon="@drawable/ic_person_white_24dp"
+            android:title="@string/my_profile_string" />
+        <item
+            android:id="@+id/nav_today_workout"
+            android:icon="@drawable/ic_fitness_center_white_24dp"
+            android:title="@string/view_workout_text" />
+        <item
+            android:id="@+id/nav_profile_search"
+            android:icon="@drawable/ic_group_white_24dp"
+            android:title="@string/profile_search_string" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings_white_24dp"
+            android:title="@string/settings_string" />
+    </group>
+</menu>
